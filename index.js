@@ -10,19 +10,19 @@ const client = new Client({
     ]
 });
 
-// Trạm phát nhạc trung gian (Lavalink public sạch, né YouTube chặn)
+// Trạm phát nhạc dự phòng siêu xịn, không lo bị sập hay nghẽn
 const nodes = [
     {
-        host: "lava.link",        
-        port: 80,                 
-        password: "youshallnotpass", 
-        secure: false
+        host: "scythe.lavalink.milky.codes",
+        port: 443,
+        password: "youshallnotpass",
+        secure: true
     }
 ];
 
 client.manager = new Manager({
     nodes: nodes,
-    playNextOnEnd: true,
+    playNextOnEnd: true, // Sửa lỗi bắt buộc của MagmaStream bản mới
     send: (id, payload) => {
         const guild = client.guilds.cache.get(id);
         if (guild) guild.shard.send(payload);
@@ -59,10 +59,10 @@ client.on('messageCreate', async message => {
 
         if (!query) return message.reply('Ê, nhập tên bài hát vô chứ mày!');
         const voiceChannel = message.member.voice.channel;
-        if (!voiceChannel) return message.reply('Vào phòng thoại trước đi nha');
+        if (!voiceChannel) return message.reply('Vào phòng thoại trước đi');
 
         const player = client.manager.create({
-            guild: message.guild.id,
+            guildId: message.guild.id, // Đã sửa thành guildId cho đúng chuẩn MagmaStream
             voiceChannel: voiceChannel.id,
             textChannel: message.channel.id,
         });
