@@ -5,11 +5,9 @@ const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent]
 });
 
-// Bản danh sách trạm dự phòng "trâu bò" nhất
+// Trạm cuối cùng, hy vọng Railway không chặn nó
 const nodes = [
-    { host: "lava.link", port: 80, password: "youshallnotpass", secure: false },
-    { host: "lavalink.oops.pufferfish.host", port: 443, password: "youshallnotpass", secure: true },
-    { host: "lavalink.lexi.pw", port: 443, password: "youshallnotpass", secure: true }
+    { host: "lavalink.sv4.pro", port: 443, password: "youshallnotpass", secure: true }
 ];
 
 client.manager = new Manager({
@@ -57,4 +55,3 @@ client.on('messageCreate', async message => {
 
 client.on("raw", (d) => client.manager.updateVoiceState(d));
 client.login(process.env.DISCORD_TOKEN);
-                                                     
