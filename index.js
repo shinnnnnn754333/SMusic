@@ -2,22 +2,14 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const { Manager } = require('magmastream');
 
 const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.GuildVoiceStates,
-        GatewayIntentBits.MessageContent
-    ]
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent]
 });
 
-// Trạm phát nhạc Lavalink đã được cập nhật mới, ổn định const nodes = [
+// Bản danh sách trạm dự phòng "trâu bò" nhất
 const nodes = [
-    {
-        host: "lavalink.oops.pufferfish.host",
-        port: 443,
-        password: "youshallnotpass",
-        secure: true
-    }
+    { host: "lava.link", port: 80, password: "youshallnotpass", secure: false },
+    { host: "lavalink.oops.pufferfish.host", port: 443, password: "youshallnotpass", secure: true },
+    { host: "lavalink.lexi.pw", port: 443, password: "youshallnotpass", secure: true }
 ];
 
 client.manager = new Manager({
@@ -34,32 +26,26 @@ client.on('ready', () => {
     client.manager.init(client.user.id);
 });
 
-client.manager.on("nodeConnect", node => console.log(`✅ Đã kết nối Lavalink: ${node.options.host}`));
-client.manager.on("nodeError", (node, error) => console.log(`❌ Lỗi Node Lavalink: ${error.message}`));
+client.manager.on("nodeConnect", node => console.log(`✅ Kết nối thành công: ${node.options.host}`));
+client.manager.on("nodeError", (node, error) => console.log(`❌ Lỗi Node ${node.options.host}: ${error.message}`));
 
 client.on('messageCreate', async message => {
     if (message.author.bot || !message.content.startsWith('!play')) return;
-    
-    console.log("👉 Nhận được lệnh !play");
 
     const args = message.content.split(' ');
     const query = args.slice(1).join(' ');
-    if (!query) return message.reply('Ê, nhập tên bài hát vô chứ mày!');
+    if (!query) return message.reply('Nhập tên bài hát đi mày!');
 
     const voiceChannel = message.member.voice.channel;
-    if (!voiceChannel) return message.reply('Vào phòng thoại trước đi nha');
+    if (!voiceChannel) return message.reply('Vô phòng voice trước đi!');
 
-    console.log("👉 Đang tạo player...");
     const player = client.manager.create({
         guildId: message.guild.id,
         voiceChannel: voiceChannel.id,
         textChannel: message.channel.id,
     });
 
-    if (player.state !== "CONNECTED") {
-        console.log("👉 Đang thử chui vào phòng...");
-        player.connect();
-    }
+    if (player.state !== "CONNECTED") player.connect();
     
     const res = await client.manager.search(query, message.author);
     if (res.loadType === "empty") return message.reply('Không tìm thấy bài!');
@@ -71,3 +57,4 @@ client.on('messageCreate', async message => {
 
 client.on("raw", (d) => client.manager.updateVoiceState(d));
 client.login(process.env.DISCORD_TOKEN);
+                                                     
