@@ -10,13 +10,13 @@ const client = new Client({
     ]
 });
 
-// Trạm phát nhạc Lavalink đã được cập nhật mới, ổn định và có pass
+// Trạm phát nhạc Lavalink đã được cập nhật mới, ổn định const nodes = [
 const nodes = [
     {
-        host: "lavalink.panther.net.vn",
-        port: 2333,
+        host: "lavalink.oops.pufferfish.host",
+        port: 443,
         password: "youshallnotpass",
-        secure: false
+        secure: true
     }
 ];
 
