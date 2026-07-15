@@ -1,19 +1,13 @@
 {
-  "name": "sai-music-bot",
+  "name": "chan-o-lavalink",
   "version": "1.0.0",
-  "description": "Bot nhac cho Shin",
+  "description": "Bot nhac xai Lavalink",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "discord.js": "^14.14.1",
-    "@discordjs/voice": "^0.17.0",
-    "play-dl": "^1.9.7",
-    "ffmpeg-static": "^5.2.0",
-    "libsodium-wrappers": "^0.7.13"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "magmastream": "^2.4.0"
   }
 }
