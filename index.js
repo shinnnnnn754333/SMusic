@@ -15,7 +15,7 @@ const client = new Client({
 // Tạo cổng mạng ảo để giữ Railway không kill bot
 const port = process.env.PORT || 3000;
 http.createServer((req, res) => {
-  res.write("Bot nhac SAI Tu Kiem Nhac dang chay!");
+  res.write("Bot nhac SAI SoundCloud dang chay muot ma!");
   res.end();
 }).listen(port);
 
@@ -27,7 +27,7 @@ client.on('messageCreate', async (message) => {
   const args = message.content.slice(PREFIX.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
-  // Lệnh tự kiếm và phát nhạc: !play [Tên bài hát hoặc Link YouTube]
+  // Lệnh tự kiếm và phát nhạc từ SoundCloud: !play [Tên bài hát]
   if (command === 'play') {
     const voiceChannel = message.member.voice.channel;
     if (!voiceChannel) return message.reply('Vào phòng voice trước đi ông nội!');
@@ -37,17 +37,19 @@ client.on('messageCreate', async (message) => {
 
     try {
       await message.channel.sendTyping();
-      let videoUrl = searchQuery;
+      
+      // Lệnh lách luật: Tự động lên SoundCloud tìm bài đầu tiên
+      const searchResults = await play.search(searchQuery, { 
+        source: { soundcloud: 'tracks' }, 
+        limit: 1 
+      });
 
-      // Nếu người dùng gõ tên bài, tự động lên YT tìm bài đầu tiên
-      if (!play.yt_validate(searchQuery)) {
-        const searchResults = await play.search(searchQuery, { limit: 1 });
-        if (searchResults.length === 0) {
-          return message.reply('Tớ không tìm thấy bài này trên YouTube rồi.');
-        }
-        videoUrl = searchResults[0].url;
-        message.channel.send(`🔍 Đã tìm thấy: **${searchResults[0].title}**`);
+      if (searchResults.length === 0) {
+        return message.reply('Đéo tìm thấy bài này trên SoundCloud luôn, gõ bài khác hoặc tên ca sĩ xem.');
       }
+
+      const track = searchResults[0];
+      message.channel.send(`☁️ Tìm thấy trên SoundCloud: **${track.name}**`);
 
       const connection = joinVoiceChannel({
         channelId: voiceChannel.id,
@@ -55,8 +57,8 @@ client.on('messageCreate', async (message) => {
         adapterCreator: message.guild.voiceAdapterCreator,
       });
 
-      // Lấy stream nhạc trực tiếp từ YouTube
-      const stream = await play.stream(videoUrl, { quality: 2 });
+      // Lấy stream nhạc trực tiếp từ SoundCloud (Bao mượt, chống chặn IP)
+      const stream = await play.stream(track.url);
       const resource = createAudioResource(stream.stream, { inputType: stream.type });
       
       const player = createAudioPlayer({
@@ -66,20 +68,20 @@ client.on('messageCreate', async (message) => {
       player.play(resource);
       connection.subscribe(player);
 
-      message.reply(`🎵 Đang phát nhạc rồi nhé anh em!`);
+      message.reply(`▶️ Đang phát nhạc rồi nhé anh em cày cuốc!`);
 
       player.on(AudioPlayerStatus.Idle, () => {
-        connection.destroy(); // Hết nhạc tự cút
+        connection.destroy(); // Hết nhạc tự cút khỏi phòng
       });
 
       player.on('error', error => {
         console.error(error);
-        message.reply('Hic, luồng âm thanh bị lỗi rồi!');
+        message.reply('Hic, luồng âm thanh SoundCloud bị lỗi rồi!');
       });
 
     } catch (error) {
       console.error(error);
-      message.reply('Lỗi rồi, server vẫn bị YouTube chặn IP, để tớ tính cách khác.');
+      message.reply('Lỗi rồi, không kết nối được tới server SoundCloud.');
     }
   }
 
@@ -102,8 +104,8 @@ client.on('messageCreate', async (message) => {
 });
 
 client.once('ready', () => {
-  console.log(`[ONLINE] Bot Nhạc Tự Kiếm đã sẵn sàng!`);
+  console.log(`[ONLINE] Bot Nhạc SoundCloud đã sẵn sàng!`);
 });
 
 client.login(process.env.DISCORD_TOKEN_MUSIC);
-  
+        
