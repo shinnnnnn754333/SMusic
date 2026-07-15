@@ -1,57 +1,39 @@
 const { Client, GatewayIntentBits } = require('discord.js');
-const { Manager } = require('magmastream');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
+const ytdl = require('ytdl-core');
 
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent]
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates]
 });
-
-// Trạm cuối cùng, hy vọng Railway không chặn nó
-const nodes = [
-    { host: "lavalink.sv4.pro", port: 443, password: "youshallnotpass", secure: true }
-];
-
-client.manager = new Manager({
-    nodes: nodes,
-    playNextOnEnd: true,
-    send: (id, payload) => {
-        const guild = client.guilds.cache.get(id);
-        if (guild) guild.shard.send(payload);
-    }
-});
-
-client.on('ready', () => {
-    console.log(`✅ Bot Chán O đã lên sóng!`);
-    client.manager.init(client.user.id);
-});
-
-client.manager.on("nodeConnect", node => console.log(`✅ Kết nối thành công: ${node.options.host}`));
-client.manager.on("nodeError", (node, error) => console.log(`❌ Lỗi Node ${node.options.host}: ${error.message}`));
 
 client.on('messageCreate', async message => {
     if (message.author.bot || !message.content.startsWith('!play')) return;
 
     const args = message.content.split(' ');
-    const query = args.slice(1).join(' ');
-    if (!query) return message.reply('Nhập tên bài hát đi mày!');
+    const url = args[1];
+    if (!url) return message.reply('Đưa link YouTube đây tao phát cho!');
 
     const voiceChannel = message.member.voice.channel;
-    if (!voiceChannel) return message.reply('Vô phòng voice trước đi!');
+    if (!voiceChannel) return message.reply('Vào phòng voice trước đi bé Shin!');
 
-    const player = client.manager.create({
+    const connection = joinVoiceChannel({
+        channelId: voiceChannel.id,
         guildId: message.guild.id,
-        voiceChannel: voiceChannel.id,
-        textChannel: message.channel.id,
+        adapterCreator: message.guild.voiceAdapterCreator,
     });
 
-    if (player.state !== "CONNECTED") player.connect();
+    const player = createAudioPlayer();
     
-    const res = await client.manager.search(query, message.author);
-    if (res.loadType === "empty") return message.reply('Không tìm thấy bài!');
+    // Tải âm thanh trực tiếp từ link
+    const stream = ytdl(url, { filter: 'audioonly', highWaterMark: 1 << 25 });
+    const resource = createAudioResource(stream);
+
+    connection.subscribe(player);
+    player.play(resource);
     
-    player.queue.add(res.tracks[0]);
-    message.reply(`Đang phát: ${res.tracks[0].title}`);
-    if (!player.playing) player.play();
+    message.reply('Đang phát nhạc cho mày, chờ tí...');
+    
+    player.on(AudioPlayerStatus.Idle, () => connection.destroy());
 });
 
-client.on("raw", (d) => client.manager.updateVoiceState(d));
 client.login(process.env.DISCORD_TOKEN);
