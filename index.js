@@ -59,7 +59,7 @@ client.on('messageCreate', async message => {
 
         if (!query) return message.reply('Ê, nhập tên bài hát vô chứ mày!');
         const voiceChannel = message.member.voice.channel;
-        if (!voiceChannel) return message.reply('Vào phòng thoại trước đi bé Shin!');
+        if (!voiceChannel) return message.reply('Vào phòng thoại trước đi nha');
 
         const player = client.manager.create({
             guild: message.guild.id,
