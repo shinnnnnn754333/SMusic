@@ -1,0 +1,18 @@
+{
+  "name": "SAIMusic",
+  "version": "1.0.0",
+  "description": "Bot phat nhac SAI",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "@discordjs/voice": "^0.16.1",
+    "@discordjs/opus": "^0.9.0",
+    "play-dl": "^1.9.6",
+    "sodium-native": "^4.1.1",
+    "axios": "^1.6.8"
+  }
+}
+
