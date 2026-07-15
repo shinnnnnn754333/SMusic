@@ -13,10 +13,10 @@ const client = new Client({
 // Trạm phát nhạc dự phòng siêu xịn, không lo bị sập hay nghẽn
 const nodes = [
     {
-        host: "scythe.lavalink.milky.codes",
-        port: 443,
+        host: "lava.link",
+        port: 80,
         password: "youshallnotpass",
-        secure: true
+        secure: false
     }
 ];
 
