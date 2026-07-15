@@ -1,5 +1,5 @@
 {
-  "name": "chan-o-lavalink",
+  "name": "chan-o-music",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -10,6 +10,7 @@
     "@discordjs/voice": "^0.17.0",
     "ytdl-core": "^4.11.5",
     "sodium-native": "^4.3.1",
-    "@discordjs/opus": "^0.9.0"
+    "@discordjs/opus": "^0.9.0",
+    "ffmpeg-static": "^5.2.0"
   }
 }
