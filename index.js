@@ -21,11 +21,6 @@ http.createServer((req, res) => {
 
 const PREFIX = '!';
 
-// Giả lập User-Agent trình duyệt để đánh lừa YouTube chống chặn IP
-play.createAgent({
-  userAgent: 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36'
-}).catch(() => console.log("Khởi tạo Agent bypass ẩn danh"));
-
 client.on('messageCreate', async (message) => {
   if (message.author.bot || !message.content.startsWith(PREFIX)) return;
 
@@ -60,7 +55,7 @@ client.on('messageCreate', async (message) => {
         adapterCreator: message.guild.voiceAdapterCreator,
       });
 
-      // Lấy stream nhạc lách luật chặn IP
+      // Lấy stream nhạc trực tiếp từ YouTube
       const stream = await play.stream(videoUrl, { quality: 2 });
       const resource = createAudioResource(stream.stream, { inputType: stream.type });
       
