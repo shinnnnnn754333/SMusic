@@ -1,7 +1,7 @@
 {
   "name": "sai-music-bot",
   "version": "1.0.0",
-  "description": "Bot nhạc cho server của Shin",
+  "description": "Bot nhac cho Shin",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
