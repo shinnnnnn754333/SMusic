@@ -12,14 +12,24 @@ const client = new Client({
   ]
 });
 
-// Tạo cổng mạng ảo để giữ Railway không kill bot
+// Tạo mạng ảo giữ bot sống
 const port = process.env.PORT || 3000;
 http.createServer((req, res) => {
-  res.write("Bot nhac SAI SoundCloud dang chay muot ma!");
+  res.write("Bot nhac SAI VIP dang chay!");
   res.end();
 }).listen(port);
 
 const PREFIX = '!';
+
+// Lấy vé VIP (Client ID) của SoundCloud tự động để khỏi bị đá
+play.getFreeClientID().then((clientID) => {
+  play.setToken({
+    soundcloud: {
+      client_id: clientID
+    }
+  });
+  console.log("[VIP] Đã chôm được vé SoundCloud: " + clientID);
+}).catch((err) => console.log("Lỗi chôm vé: ", err));
 
 client.on('messageCreate', async (message) => {
   if (message.author.bot || !message.content.startsWith(PREFIX)) return;
@@ -27,25 +37,24 @@ client.on('messageCreate', async (message) => {
   const args = message.content.slice(PREFIX.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
-  // Lệnh tự kiếm và phát nhạc từ SoundCloud: !play [Tên bài hát]
+  // Lệnh tự kiếm nhạc SoundCloud: !play [tên bài hát]
   if (command === 'play') {
     const voiceChannel = message.member.voice.channel;
-    if (!voiceChannel) return message.reply('Vào phòng voice trước đi ông nội!');
+    if (!voiceChannel) return message.reply('Vào phòng voice đi mạy, định cho ma nghe à!');
 
     const searchQuery = args.join(' ');
-    if (!searchQuery) return message.reply('Gõ tên bài hát tớ mới tìm được chứ!');
+    if (!searchQuery) return message.reply('Gõ tên bài hát ra tớ mới kiếm được chứ!');
 
     try {
       await message.channel.sendTyping();
       
-      // Lệnh lách luật: Tự động lên SoundCloud tìm bài đầu tiên
       const searchResults = await play.search(searchQuery, { 
         source: { soundcloud: 'tracks' }, 
         limit: 1 
       });
 
       if (searchResults.length === 0) {
-        return message.reply('Đéo tìm thấy bài này trên SoundCloud luôn, gõ bài khác hoặc tên ca sĩ xem.');
+        return message.reply('Đéo tìm thấy bài này trên SoundCloud, thử gõ tên khác đi.');
       }
 
       const track = searchResults[0];
@@ -57,7 +66,6 @@ client.on('messageCreate', async (message) => {
         adapterCreator: message.guild.voiceAdapterCreator,
       });
 
-      // Lấy stream nhạc trực tiếp từ SoundCloud (Bao mượt, chống chặn IP)
       const stream = await play.stream(track.url);
       const resource = createAudioResource(stream.stream, { inputType: stream.type });
       
@@ -68,27 +76,25 @@ client.on('messageCreate', async (message) => {
       player.play(resource);
       connection.subscribe(player);
 
-      message.reply(`▶️ Đang phát nhạc rồi nhé anh em cày cuốc!`);
-
       player.on(AudioPlayerStatus.Idle, () => {
-        connection.destroy(); // Hết nhạc tự cút khỏi phòng
+        connection.destroy();
       });
 
       player.on('error', error => {
         console.error(error);
-        message.reply('Hic, luồng âm thanh SoundCloud bị lỗi rồi!');
+        message.reply('Má, luồng âm thanh bị lỗi mẹ rồi!');
       });
 
     } catch (error) {
       console.error(error);
-      message.reply('Lỗi rồi, không kết nối được tới server SoundCloud.');
+      message.reply('Lỗi mẹ rồi, nãy chôm vé SoundCloud hụt cmnr!');
     }
   }
 
-  // Lệnh tắt nhạc rời phòng: !stop
+  // Lệnh out phòng: !stop
   if (command === 'stop') {
     const voiceChannel = message.member.voice.channel;
-    if (!voiceChannel) return message.reply('Vào phòng voice mới bắt tớ tắt được.');
+    if (!voiceChannel) return message.reply('Mày vào phòng đi rồi tao mới tắt nhạc được.');
     
     const connection = joinVoiceChannel({
       channelId: voiceChannel.id,
@@ -98,13 +104,13 @@ client.on('messageCreate', async (message) => {
     
     if (connection) {
       connection.destroy();
-      message.reply('Tắt nhạc! Rời phòng liền đây.');
+      message.reply('Tắt nhạc! Rút quân đây.');
     }
   }
 });
 
 client.once('ready', () => {
-  console.log(`[ONLINE] Bot Nhạc SoundCloud đã sẵn sàng!`);
+  console.log(`[ONLINE] Bot Nhạc đã tái sinh!`);
 });
 
 client.login(process.env.DISCORD_TOKEN_MUSIC);
