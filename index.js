@@ -1,7 +1,6 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 const { Manager } = require('magmastream');
 
-// Khởi tạo Bot với các quyền cơ bản
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -11,17 +10,16 @@ const client = new Client({
     ]
 });
 
-// Cấu hình trạm Lavalink (Mượn server người ta để cào nhạc)
+// Trạm phát nhạc trung gian (Lavalink public sạch, né YouTube chặn)
 const nodes = [
     {
-        host: "lava.link",        // Địa chỉ trạm Lavalink công cộng
-        port: 80,                 // Cổng mặc định
-        password: "youshallnotpass", // Mật khẩu mặc định của trạm này
+        host: "lava.link",        
+        port: 80,                 
+        password: "youshallnotpass", 
         secure: false
     }
 ];
 
-// Khởi tạo hệ thống quản lý Lavalink
 client.manager = new Manager({
     nodes: nodes,
     send: (id, payload) => {
@@ -30,9 +28,8 @@ client.manager = new Manager({
     }
 });
 
-// -- CÁC SỰ KIỆN CỦA LAVALINK --
-client.manager.on("nodeConnect", node => console.log(`✅ Đã kết nối thành công với trạm Lavalink: ${node.options.host}`));
-client.manager.on("nodeError", (node, error) => console.log(`❌ Lỗi trạm Lavalink ${node.options.host}: ${error.message}`));
+client.manager.on("nodeConnect", node => console.log(`✅ Kết nối thành công Lavalink: ${node.options.host}`));
+client.manager.on("nodeError", (node, error) => console.log(`❌ Lỗi Lavalink: ${error.message}`));
 
 client.manager.on("trackStart", (player, track) => {
     const channel = client.channels.cache.get(player.textChannel);
@@ -42,48 +39,40 @@ client.manager.on("trackStart", (player, track) => {
 client.manager.on("queueEnd", player => {
     const channel = client.channels.cache.get(player.textChannel);
     channel.send("Hết nhạc rồi, tao lượn đây!");
-    player.destroy(); // Hết nhạc thì tự động hủy player và out phòng
+    player.destroy(); 
 });
 
-// -- KHỞI ĐỘNG BOT VÀ KẾT NỐI --
 client.once('ready', () => {
     console.log(`✅ Bot ${client.user.tag} đã lên sóng!`);
-    client.manager.init(client.user.id); // Khởi động Lavalink khi bot ready
+    client.manager.init(client.user.id); 
 });
 
-// Gửi dữ liệu âm thanh của Discord qua cho Lavalink xử lý
 client.on("raw", (d) => client.manager.updateVoiceState(d));
 
-// -- BẮT LỆNH CHAT CỦA MÀY --
 client.on('messageCreate', async message => {
     if (message.author.bot || !message.inGuild()) return;
 
-    // Lệnh !play
     if (message.content.startsWith('!play')) {
         const args = message.content.split(' ');
         const query = args.slice(1).join(' ');
 
         if (!query) return message.reply('Ê, nhập tên bài hát vô chứ mày!');
         const voiceChannel = message.member.voice.channel;
-        if (!voiceChannel) return message.reply('Mày phải vào phòng thoại trước thì tao mới biết đường hầu!');
+        if (!voiceChannel) return message.reply('Vào phòng thoại trước đi bé Shin!');
 
-        // Tạo Trình phát (Player) cho server
         const player = client.manager.create({
             guild: message.guild.id,
             voiceChannel: voiceChannel.id,
             textChannel: message.channel.id,
         });
 
-        // Nối vào phòng
         if (player.state !== "CONNECTED") player.connect();
 
-        // Tìm nhạc qua trạm Lavalink
         const res = await client.manager.search(query, message.author);
         
         if (res.loadType === "empty") return message.reply('Không tìm thấy bài này!');
-        if (res.loadType === "error") return message.reply('Lỗi cmnr, thử bài khác đi!');
+        if (res.loadType === "error") return message.reply('Lỗi rồi, thử bài khác đi!');
 
-        // Nhét nhạc vào hàng đợi
         if (res.loadType === "playlist") {
             player.queue.add(res.tracks);
             message.reply(`Đã gom cả playlist **${res.playlist.name}** vào danh sách.`);
@@ -95,22 +84,20 @@ client.on('messageCreate', async message => {
         }
     }
 
-    // Lệnh !skip
     if (message.content === '!skip') {
         const player = client.manager.players.get(message.guild.id);
-        if (!player) return message.reply("Có bài nào đang phát đâu mà qua!");
-        player.stop(); // Stop sẽ tự động nhảy bài tiếp theo
+        if (!player) return message.reply("Có bài nào đang phát đâu!");
+        player.stop(); 
         message.reply("Đã next!");
     }
 
-    // Lệnh !stop
     if (message.content === '!stop') {
         const player = client.manager.players.get(message.guild.id);
         if (!player) return message.reply("Đang im re mà tắt gì!");
-        player.destroy(); // Hủy kết nối
+        player.destroy(); 
         message.reply("Đã tắt nhạc và sủi!");
     }
 });
 
-// NHỚ THAY TOKEN VÀO DÒNG DƯỚI NÀY
-client.login');
+// Đọc Token từ biến môi trường cực kỳ an toàn
+client.login(process.env.DISCORD_TOKEN);
