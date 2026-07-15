@@ -22,6 +22,7 @@ const nodes = [
 
 client.manager = new Manager({
     nodes: nodes,
+    playNextOnEnd: true
     send: (id, payload) => {
         const guild = client.guilds.cache.get(id);
         if (guild) guild.shard.send(payload);
