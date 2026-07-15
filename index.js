@@ -1,6 +1,5 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice');
-const play = require('play-dl');
 const http = require('http');
 
 const client = new Client({
@@ -12,10 +11,10 @@ const client = new Client({
   ]
 });
 
-// Tạo cổng mạng ảo để Railway không kill bot
+// Tạo cổng mạng ảo để giữ Railway không kill bot
 const port = process.env.PORT || 3000;
 http.createServer((req, res) => {
-  res.write("Bot nhac SAI dang quay rat gat!");
+  res.write("Bot nhac SAI Direct Link dang chay!");
   res.end();
 }).listen(port);
 
@@ -27,26 +26,21 @@ client.on('messageCreate', async (message) => {
   const args = message.content.slice(PREFIX.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
-  // Lệnh chọn nhạc theo tên hoặc link: !play [tên bài hát]
+  // Lệnh phát bằng link trực tiếp: !play [Link]
   if (command === 'play') {
     const voiceChannel = message.member.voice.channel;
-    if (!voiceChannel) return message.reply('Vào phòng voice trước đi ông nội!');
+    if (!voiceChannel) return message.reply('Vào phòng voice trước đi chứ!');
 
-    const searchQuery = args.join(' ');
-    if (!searchQuery) return message.reply('Gõ tên bài hát hoặc dán cái link YouTube vào đê!');
+    let streamUrl = args[0];
+    if (!streamUrl) return message.reply('Đưa cái link nhạc đây tớ mở cho!');
 
     try {
       await message.channel.sendTyping();
-      let videoUrl = searchQuery;
 
-      // Nếu không phải link trực tiếp, tự động tìm kiếm trên YouTube
-      if (!play.yt_validate(searchQuery)) {
-        const searchResults = await play.search(searchQuery, { limit: 1 });
-        if (searchResults.length === 0) {
-          return message.reply('Đéo tìm thấy bài này trên YouTube luôn, gõ từ khác đi.');
-        }
-        videoUrl = searchResults[0].url;
-        message.channel.send(`🔍 Đã tìm thấy: **${searchResults[0].title}**`);
+      // Mẹo tự chuyển đổi nếu người dùng dán link chia sẻ từ Google Drive
+      if (streamUrl.includes('drive.google.com/file/d/')) {
+        const fileId = streamUrl.split('/d/')[1].split('/')[0];
+        streamUrl = `https://docs.google.com/uc?export=download&id=${fileId}`;
       }
 
       const connection = joinVoiceChannel({
@@ -55,9 +49,8 @@ client.on('messageCreate', async (message) => {
         adapterCreator: message.guild.voiceAdapterCreator,
       });
 
-      // Tạo stream nhạc chất lượng cao
-      const stream = await play.stream(videoUrl, { quality: 2 });
-      const resource = createAudioResource(stream.stream, { inputType: stream.type });
+      // Tạo nguồn âm thanh trực tiếp từ URL
+      const resource = createAudioResource(streamUrl);
       
       const player = createAudioPlayer({
         behaviors: { noSubscriber: NoSubscriberBehavior.Play }
@@ -66,27 +59,27 @@ client.on('messageCreate', async (message) => {
       player.play(resource);
       connection.subscribe(player);
 
-      message.reply(`🎵 Đang phát nhạc rồi nhé anh em cày cuốc!`);
+      message.reply(`🎵 Đang phát nhạc từ liên kết cậu gửi rồi nhé!`);
 
       player.on(AudioPlayerStatus.Idle, () => {
-        connection.destroy();
+        connection.destroy(); // Hết nhạc tự động out phòng
       });
 
       player.on('error', error => {
         console.error(error);
-        message.reply('Hic, luồng âm thanh bị lỗi rồi!');
+        message.reply('Hic, liên kết này không phát được hoặc bị lỗi định dạng rồi.');
       });
 
     } catch (error) {
       console.error(error);
-      message.reply('Lỗi rồi, khả năng cao server đang bị YouTube chặn IP.');
+      message.reply('Lỗi rồi, không thể kết nối hoặc tải file nhạc.');
     }
   }
 
   // Lệnh dừng nhạc out phòng: !stop
   if (command === 'stop') {
     const voiceChannel = message.member.voice.channel;
-    if (!voiceChannel) return message.reply('Vào phòng voice mới bắt tớ tắt nhạc được chứ.');
+    if (!voiceChannel) return message.reply('Vào phòng voice mới bắt tớ tắt được.');
     
     const connection = joinVoiceChannel({
       channelId: voiceChannel.id,
@@ -96,18 +89,14 @@ client.on('messageCreate', async (message) => {
     
     if (connection) {
       connection.destroy();
-      message.reply('Tắt nhạc! Rời phòng voice liền đây.');
+      message.reply('Tắt nhạc! Rời phòng đây.');
     }
   }
 });
 
 client.once('ready', () => {
-  console.log(`[ONLINE] Bot Nhạc SAI xịn sò đã sẵn sàng!`);
+  console.log(`[ONLINE] Bot Nhạc Phát Link đã sẵn sàng!`);
 });
 
-// Chống crash sập nguồn nếu chưa cài biến môi trường
-if (!process.env.DISCORD_TOKEN_MUSIC) {
-  console.log("Cảnh báo: Chưa thèm add biến DISCORD_TOKEN_MUSIC vào tab Variables kìa!");
-} else {
-  client.login(process.env.DISCORD_TOKEN_MUSIC).catch(err => console.error("Lỗi Token rồi: ", err));
-}
+client.login(process.env.DISCORD_TOKEN_MUSIC);
+
