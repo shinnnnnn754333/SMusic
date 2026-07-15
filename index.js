@@ -2,16 +2,23 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const { Manager } = require('magmastream');
 
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent]
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.MessageContent
+    ]
 });
 
-// Thử Node Lavalink mới nhất, con hàng này khá ổn định
-const nodes = [{
-    host: "lava.link", 
-    port: 80,
-    password: "youshallnotpass",
-    secure: false
-}];
+// Trạm phát nhạc Lavalink đã được cập nhật mới, ổn định và có pass
+const nodes = [
+    {
+        host: "lavalink.panther.net.vn",
+        port: 2333,
+        password: "youshallnotpass",
+        secure: false
+    }
+];
 
 client.manager = new Manager({
     nodes: nodes,
@@ -23,7 +30,7 @@ client.manager = new Manager({
 });
 
 client.on('ready', () => {
-    console.log(`✅ Bot đã lên sóng: ${client.user.tag}`);
+    console.log(`✅ Bot Chán O đã lên sóng!`);
     client.manager.init(client.user.id);
 });
 
@@ -33,16 +40,16 @@ client.manager.on("nodeError", (node, error) => console.log(`❌ Lỗi Node Lava
 client.on('messageCreate', async message => {
     if (message.author.bot || !message.content.startsWith('!play')) return;
     
-    console.log("👉 Nhận được lệnh !play"); // DEBUG: Xem nó có nhận lệnh không
+    console.log("👉 Nhận được lệnh !play");
 
     const args = message.content.split(' ');
     const query = args.slice(1).join(' ');
-    if (!query) return message.reply('Ê, nhập tên bài hát vô!');
+    if (!query) return message.reply('Ê, nhập tên bài hát vô chứ mày!');
 
     const voiceChannel = message.member.voice.channel;
-    if (!voiceChannel) return message.reply('Vào phòng thoại trước đi bé Shin!');
+    if (!voiceChannel) return message.reply('Vào phòng thoại trước đi nha');
 
-    console.log("👉 Đang tạo player..."); // DEBUG: Xem nó chạy đến đoạn này chưa
+    console.log("👉 Đang tạo player...");
     const player = client.manager.create({
         guildId: message.guild.id,
         voiceChannel: voiceChannel.id,
@@ -50,7 +57,7 @@ client.on('messageCreate', async message => {
     });
 
     if (player.state !== "CONNECTED") {
-        console.log("👉 Đang thử chui vào phòng..."); // DEBUG
+        console.log("👉 Đang thử chui vào phòng...");
         player.connect();
     }
     
