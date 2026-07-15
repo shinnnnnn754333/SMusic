@@ -1,9 +1,14 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const ytdl = require('ytdl-core');
+const ffmpeg = require('ffmpeg-static');
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates]
+});
+
+client.on('ready', () => {
+    console.log(`✅ Bot Chán O đã lên sóng!`);
 });
 
 client.on('messageCreate', async message => {
@@ -24,14 +29,22 @@ client.on('messageCreate', async message => {
 
     const player = createAudioPlayer();
     
-    // Tải âm thanh trực tiếp từ link
-    const stream = ytdl(url, { filter: 'audioonly', highWaterMark: 1 << 25 });
-    const resource = createAudioResource(stream);
-
-    connection.subscribe(player);
-    player.play(resource);
-    
-    message.reply('Đang phát nhạc cho mày, chờ tí...');
+    try {
+        const stream = ytdl(url, { 
+            filter: 'audioonly', 
+            highWaterMark: 1 << 25,
+            quality: 'highestaudio' 
+        });
+        
+        const resource = createAudioResource(stream, { inlineVolume: true });
+        connection.subscribe(player);
+        player.play(resource);
+        
+        message.reply('Đang phát nhạc cho mày, chờ tí...');
+    } catch (error) {
+        message.reply('Lỗi rồi mày ơi, chắc YouTube nó chặn IP con bot này rồi!');
+        console.error(error);
+    }
     
     player.on(AudioPlayerStatus.Idle, () => connection.destroy());
 });
