@@ -3,34 +3,24 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerSta
 const play = require('play-dl');
 const http = require('http');
 
-// Ép ffmpeg hoạt động
-require('ffmpeg-static');
-
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildVoiceStates
-  ]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates]
 });
 
-// Giữ Railway luôn tỉnh táo
+// Giữ Railway không ngủ đông
 http.createServer((req, res) => res.end("Bot SAI Alive!")).listen(process.env.PORT || 3000);
 
 client.on('messageCreate', async (message) => {
   if (message.author.bot || !message.content.startsWith('!play')) return;
 
   const query = message.content.replace('!play', '').trim();
-  if (!query) return message.reply('Gõ tên bài hát đi ông nội!');
-
   const voiceChannel = message.member.voice.channel;
-  if (!voiceChannel) return message.reply('Vào phòng voice đi mạy!');
+  
+  if (!voiceChannel) return message.reply('Vào voice đi bé Shin ơi!');
 
   try {
-    await message.channel.sendTyping();
     const search = await play.search(query, { source: { soundcloud: 'tracks' }, limit: 1 });
-    if (!search.length) return message.reply('Đéo tìm thấy bài hát này!');
+    if (!search.length) return message.reply('Không thấy bài nào cả!');
 
     const connection = joinVoiceChannel({
       channelId: voiceChannel.id,
@@ -46,16 +36,11 @@ client.on('messageCreate', async (message) => {
 
     player.play(resource);
     connection.subscribe(player);
+    message.reply(`🎵 Đang phát nhạc cho bé Shin: **${search[0].name}**`);
     
-    message.reply(`🎵 Đang phát: **${search[0].name}** - Quẩy thôi!`);
-    
-    player.on('error', err => {
-        console.error(err);
-        message.channel.send('Lỗi luồng âm thanh rồi!');
-    });
   } catch (err) {
     console.error(err);
-    message.reply('Không phát được, check lại quyền trong kênh đi!');
+    message.reply('Bot lỗi, có thể do link nhạc SoundCloud bị chặn hoặc lỗi kết nối!');
   }
 });
 
