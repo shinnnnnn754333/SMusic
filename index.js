@@ -1,36 +1,43 @@
 const { Client, GatewayIntentBits } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const play = require('play-dl');
 const http = require('http');
 
-// Ép ffmpeg-static hoạt động
+// Ép ffmpeg hoạt động
 require('ffmpeg-static');
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildVoiceStates
+  ]
 });
 
-http.createServer((req, res) => res.end("Bot Alive")).listen(process.env.PORT || 3000);
+// Giữ Railway luôn tỉnh táo
+http.createServer((req, res) => res.end("Bot SAI Alive!")).listen(process.env.PORT || 3000);
 
 client.on('messageCreate', async (message) => {
   if (message.author.bot || !message.content.startsWith('!play')) return;
 
   const query = message.content.replace('!play', '').trim();
-  if (!query) return message.reply('Gõ tên bài hát đi!');
+  if (!query) return message.reply('Gõ tên bài hát đi ông nội!');
 
   const voiceChannel = message.member.voice.channel;
-  if (!voiceChannel) return message.reply('Vào phòng voice trước đi!');
+  if (!voiceChannel) return message.reply('Vào phòng voice đi mạy!');
 
   try {
     await message.channel.sendTyping();
     const search = await play.search(query, { source: { soundcloud: 'tracks' }, limit: 1 });
-    if (!search.length) return message.reply('Không tìm thấy bài.');
+    if (!search.length) return message.reply('Đéo tìm thấy bài hát này!');
 
     const connection = joinVoiceChannel({
       channelId: voiceChannel.id,
       guildId: message.guild.id,
       adapterCreator: message.guild.voiceAdapterCreator,
-      selfDeaf: false
+      selfDeaf: false,
+      selfMute: false
     });
 
     const stream = await play.stream(search[0].url);
@@ -40,7 +47,7 @@ client.on('messageCreate', async (message) => {
     player.play(resource);
     connection.subscribe(player);
     
-    message.reply(`🎵 Đang phát: **${search[0].name}**`);
+    message.reply(`🎵 Đang phát: **${search[0].name}** - Quẩy thôi!`);
     
     player.on('error', err => {
         console.error(err);
@@ -48,7 +55,7 @@ client.on('messageCreate', async (message) => {
     });
   } catch (err) {
     console.error(err);
-    message.reply('Không phát được, kiểm tra lại quyền voice đi!');
+    message.reply('Không phát được, check lại quyền trong kênh đi!');
   }
 });
 
